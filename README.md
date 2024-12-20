@@ -6,7 +6,7 @@
 
 📑 [Paper]() | 🤗 [Leaderboard]() | 🤗 [Development Set]() | 🤗 [Human Agreement Set]()
 
- <img src="assets/logo_cropped.webp" alt="HREF logo" height="300"/>
+ <img src="assets/Ai2_logo_pink_RGB.png" alt="HREF logo" height="50"/>
 </div>
 
 ### Announcement
@@ -149,7 +149,7 @@ python scripts/build_leaderboard.py \
 To submit your custom model / change the configuration of your model to be evaluated on HREF's evaluation set and posted on the [leaderboard](), create a Github issue or directly email us at xxxATallenaiDOTorg with either the model generation configuration you have created in Option 1 in **Evaluate a custom model**.
 
 ## Human Agreement Analysis
-To calculate the human agreement rate of an evaluation method on HREF human agreement set, run:
+To calculate the human agreement rate of an evaluation method on HREF human agreement set (Section 3 and 4 in the paper), run:
 ```bash
 href calculate_agreement \
     --annotator llama3.1-70b_basic_w_reference \
