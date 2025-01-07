@@ -14,7 +14,12 @@
 
 ### Citation
 ```
-
+@article{lyu2024href,
+      title={HREF: Human Response-Guided Evaluation of Instruction Following in Language Models}, 
+      author={Xinxi Lyu and Yizhong Wang and Hannaneh Hajishirzi and Pradeep Dasigi},
+      journal={arXiv preprint arXiv:2412.15524},
+      year={2024} 
+}
 ```
 
 ## Install
