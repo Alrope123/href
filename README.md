@@ -10,7 +10,7 @@
 </div>
 
 ### Announcement
-* **11/07/2024**: 🌟We officially publish the paper [HREF paper](), along with this codebase, the [HREF leaderboard](), [the validaiton set](), and [the human agreement set]()! 🌟
+* **12/20/2024**: 🌟We officially publish the paper [HREF paper](), along with this codebase, the [HREF leaderboard](), [the validaiton set](), and [the human agreement set]()! 🌟
 
 ### Citation
 ```
