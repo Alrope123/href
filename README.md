@@ -4,13 +4,13 @@
 
 <div align="center">
 
-📑 [Paper]() | 🤗 [Leaderboard]() | 🤗 [Development Set]() | 🤗 [Human Agreement Set]()
+📑 [Paper](https://arxiv.org/abs/2412.15524) | 🤗 [Leaderboard](https://huggingface.co/spaces/allenai/href) | 🤗 [Development Set](https://huggingface.co/datasets/allenai/href) | 🤗 [Human Agreement Set](https://huggingface.co/datasets/allenai/href_preference)
 
  <img src="assets/Ai2_logo_pink_RGB.png" alt="HREF logo" height="50"/>
 </div>
 
 ### Announcement
-* **12/20/2024**: 🌟We officially publish the paper [HREF paper](), along with this codebase, the [HREF leaderboard](), [the validaiton set](), and [the human agreement set]()! 🌟
+* **12/20/2024**: 🌟We officially publish the paper [HREF paper](https://arxiv.org/abs/2412.15524), along with this codebase, the [HREF leaderboard](https://huggingface.co/spaces/allenai/href), [the development set](https://huggingface.co/datasets/allenai/href), and [the human agreement set](https://huggingface.co/datasets/allenai/href_preference)! 🌟
 
 ### Citation
 ```
