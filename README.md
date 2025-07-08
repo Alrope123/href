@@ -36,7 +36,7 @@ pip install -e .
 ## Quick Start 🏃 
 To evaluate a supported model on href development set (See a list under `href/generation/configs`), run:
 ```bash
-href evaluate \
+href_evaluate \
     --model_name Llama-3.1-8B-Instruct \
     --annotator href
 ```
@@ -46,7 +46,7 @@ href evaluate \
 ### Evaluate a supported model
 To evaluate a supported model (See a list under `href/generation/configs`) beginning from generating its output using a supported annotator, run:
 ```bash
-href evaluate \
+href_evaluate \
     --model_name Llama-3.1-8B-Instruct \
     --annotator llama3.1-70b_basic_w_reference \
     --use_human_reference
@@ -97,7 +97,7 @@ Create a generation configuration for your model (examples can be found under `g
 
 Now run:
 ```bash
-href evaluate \
+href_evaluate \
     --model_name <your configuration file name> \
     --annotator href \ 
     --generation_config_dir < directory cotaining your file>
@@ -121,7 +121,7 @@ where each data point in responses.jsonl contains the fields: `instruction`, `ou
 
 3. Now run with `--response_dir` specified:
 ```bash
-href evaluate \
+href_evaluate \
     --model_name <any custom model name> \
     --response_dir <your response directory> \
     --annotator href 
@@ -156,7 +156,7 @@ To submit your custom model / change the configuration of your model to be evalu
 ## Human Agreement Analysis
 To calculate the human agreement rate of an evaluation method on HREF human agreement set (Section 3 and 4 in the paper), run:
 ```bash
-href calculate_agreement \
+href_calculate_agreement \
     --annotator llama3.1-70b_basic_w_reference \
     --use_human_reference
 ```
@@ -188,7 +188,7 @@ For this section, we give instructions on how to add a new evaluator `<new_evalu
 2. Add the name `<new_evaluator>` to `href.evaluation.evaluators.DEFINED_ANNOTATORS`.
 3. Run: 
 ```bash
-href calculate_agreement \
+href_calculate_agreement \
     --annotator <new_evaluator> \
     --use_human_reference
 ```
@@ -210,7 +210,7 @@ To use llm_as_a_judge, we use a external package: a [modified version](https://g
 #### 3. Create the configuration file 
 To create the configuration file using the configurations from the previous two steps, run:
 ```bash
-href create_config \
+href_create_config \
     --model_config_name <new_evaluator> \
     --template_name <new_template> 
 ```
@@ -231,14 +231,14 @@ href create_config \
 
 This will create a configuration directory with the name `<new_evaluator>_<new_template>` under `config_dir` (default to be `href/llm_as_a_judge/configs`), which contains a configuration yaml file and a resulting prompt template. Now run:
 ```bash
-href calculate_agreement \
+href_calculate_agreement \
     --annotator `<new_evaluator>_<new_template>` \
     --use_human_reference
 ```
 ### Add an Evaluator suite
 To create a evaluator suite where different unit evaluators are used for different categories, append to `href/evaluation/evaluators.py/ANNOTATOR_SUITE_DICT` where you specify the unit annotator with `annotator` and whether each annotator uses human responses with `use_human_reference` for each category. Then run:
 ```bash
-href calculate_agreement --annotator `<new_evaluator_suite>`
+href_calculate_agreement --annotator `<new_evaluator_suite>`
 ```
 
 *Note that you should optionally pass in `--use_human_reference` according to whether your evaluator need to utilize the human responses unless your are specifying a evaluator suite.*
