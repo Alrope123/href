@@ -86,6 +86,8 @@ def evaluate(args):
 
     # load model responses
     href_data = datasets.load_dataset(args.dataset)[args.split]
+    href_data2 = datasets.load_dataset("json", data_files=f"/weka_data/xinxil/href_data/processed_model_responses_11x25_private.jsonl", split="train")
+    href_data = datasets.concatenate_datasets([href_data, href_data2])
     data = defaultdict(list)
     for example in href_data:
         category = example['category']
@@ -145,7 +147,7 @@ def evaluate(args):
             # run the according evaluation function
             evaluate_func = getattr(annotator_funcs, annotator)
             cur_annotations = evaluate_func(category_responses_b, category_responses_a, category_human_references, args)
-            os.makedirs(os.path.join(args.save_dir, "human_agreement_analysis", annotator, category.lower().replace(" ", "_")), exist_ok=True)
+            os.makedirs(os.path.join(output_path, annotator), exist_ok=True)
             json.dump(cur_annotations, open(os.path.join(output_path, annotator, "annotations.json"), 'w'))
         else: # llm annotators
             cache_dir = os.path.join(args.cache_dir, "human_agreement_analysis", category.lower().replace(" ", "_"))
