@@ -26,6 +26,8 @@ def evaluate(args):
     # load model generated response
     model_responses = defaultdict(list)
     for category in args.nr_category:
+        if not os.path.exists(os.path.join(response_dir, category.lower().replace(" ", "_"))):
+            os.makedirs(os.path.join(response_dir, category.lower().replace(" ", "_")), exist_ok=True)
         with open(os.path.join(response_dir, category.lower().replace(" ", "_"), "responses.jsonl"), "r") as fin:
             model_responses[category].extend([json.loads(line) for line in fin])
 
