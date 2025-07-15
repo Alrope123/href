@@ -4,7 +4,6 @@ import argparse
 import yaml
 import random
 import copy
-from transformers import AutoTokenizer
 
 def remove_substring_between(original_string, start_substring, end_substring):
     while True:
@@ -37,9 +36,9 @@ def create_config(args):
     with open(os.path.join(root_directory, "config_template.yaml"), 'r') as f:
         config = yaml.safe_load(f)
     # load config setting
-    model_configs = json.load(open(os.path.join(root_directory, "model_settings.json"), 'r'))[model]
+    model_configs = json.load(open(os.path.join(root_directory, "model_settings_legacy.json"), 'r'))[model]
     # load selected template
-    with open(os.path.join(root_directory, "prompt_templates", f"{template_name}.txt"), 'r') as f:
+    with open(os.path.join(root_directory, "prompt_templates_legacy", f"{template_name}.txt"), 'r') as f:
         template = f.read()
     
     # modify the config name
@@ -47,35 +46,28 @@ def create_config(args):
     config[template_name] = copy.deepcopy(config["base"])
     del config["base"]
     config[template_name]["prompt_template"] = os.path.join(template_name, "prompt.txt")
-
-    # whether to exclude demonstrations
-    if no_example:
-        template = remove_substring_between(template, "{" + "example_begin" + "}", "{" + "example_end" + "}")
-    else:
-        template = template.replace("{" + "example_begin" + "}", "").replace("{" + "example_end" + "}", "")
     
     # change the default setting from the config template using the config setting file
     for k, v in model_configs.items():
-        if k != "system_message":
+        if k == "template_kwargs":
+            for place_holder, text in v.items():
+                template = template.replace("{" + place_holder + "}", text) 
+        else:
             config[template_name][k] = v
-
-    tokenizer = AutoTokenizer.from_pretrained(config[template_name]["completions_kwargs"]["model_name"])
-    messages = [
-        {"role": "system", "content": model_configs["system_message"]},
-        {"role": "user", "content": template}
-    ]
-    template = tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True,
-    )
-
+    
     # do sampling while judging
     if do_sampling and model not in ["gpt4", "gpt4-turbo"]:
         config[template_name]["completions_kwargs"]["do_sample"] = True
     elif not do_sampling and model not in ["gpt4", "gpt4-turbo"]:
         config[template_name]["completions_kwargs"]["do_sample"] = False
     config[template_name]["completions_kwargs"]["temperature"] = temperature
+
+
+    # whether to exclude demonstrations
+    if no_example:
+        template = remove_substring_between(template, "{" + "example_begin" + "}", "{" + "example_end" + "}")
+    else:
+        template = template.replace("{" + "example_begin" + "}", "").replace("{" + "example_end" + "}", "")
 
     # save the resulting configuration
     if not os.path.exists(os.path.join(config_dir, template_name)):

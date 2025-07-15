@@ -1,5 +1,6 @@
-<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-You are a helpful assistant that helps us rate an AI model's responses to instructions.<|eot_id|><|start_header_id|>user<|end_header_id|>
+<|im_start|>system
+You are a helpful assistant that helps us rate an AI model's responses to instructions.<|im_end|>
+<|im_start|>user
 Decide which response from the AI system following the instruction is better, considering the following questions:
 
 1. Does the response precisely follow the instruction? For example, a response that includes unrelated information or does not fulfill the task is not precisely following the instruction. 
@@ -52,4 +53,5 @@ Now is the real task, just select among: A, B, or tie.
 ## Response B:
 {output_2}
 
-## Which is best, A, B, or tie?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+## Which is best, A, B, or tie?<|im_end|>
+<|im_start|>assistant

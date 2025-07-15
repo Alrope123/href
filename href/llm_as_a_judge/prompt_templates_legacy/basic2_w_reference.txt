@@ -1,3 +1,5 @@
+{beginning}{normal_message_start}{system_identifier}
+{system_message}{model_message_end}{normal_message_start}{user_identifier}
 Decide which response from the AI system following the instruction is better, considering the following questions:
 
 1. Does the response precisely follow the instruction? For example, a response that includes unrelated information or does not fulfill the task is not precisely following the instruction. Compare each response with the provided human response to decide if a response faithfully follows the instruction, especially when the instruction asks for expected word count or format. 
@@ -76,4 +78,4 @@ Now is the real task, just select among: A, B, or tie.
 ## Human Response:
 {output_human}
 
-## Which is best, A, B, or tie?
+## Which is best, A, B, or tie?{user_message_end}

@@ -1,3 +1,5 @@
+{beginning}{normal_message_start}{system_identifier}
+{system_message}{model_message_end}{normal_message_start}{user_identifier}
 Decide which response from the AI system following the instruction is better, considering the following questions:
 
 1. Does the response precisely follow the instruction? For example, a response that includes unrelated information or does not fulfill the task is not precisely following the instruction. 
@@ -10,33 +12,47 @@ Select the response A or B that you prefer, or select tie if the two responses a
 
 # Example:
 ## Instruction:
-What type of Rifle is an AK47? 
+Paraphrase the following question: "What is the capital of France?
 
 ## Response A:
-An AK47 is a type of assault rifle.
+The capital of France is Paris.
 
 ## Response B:
-The AK47 is a type of rifle that is commonly associated with Soviet and Russian military forces. It is a semi-automatic assault rifle that is chambered in 7.62x39mm and is considered to be one of the most popular and widely used firearms in the world. The AK47 is known for its durability, reliability, and accuracy, and it is able to fire up to 45 rounds per minute. It is also popular among civilians due to its low cost and ease of use. The AK47 is an iconic weapon that has been featured in numerous movies, video games, and other pop culture references.
+Can you tell me the name of the city that serves as the capital of France?
 
-Here A directly and concisely answers the type of AK47 as asked by the instruction. In contrast, B is too verbose and talks about AK47’s background, advantages, and influence, which are unrelated to the instruction.
+In this example, B paraphrases the question as asked by the instruction. In contrast, A does not follow instruction as it answers the question instead.
 ## Which is best, A, B, or tie?
-A
+B
 
 # Example:
 ## Instruction:
-Given a table of data, compute the average
-Table of data: 
-1, 3, 5, 6, 9
+Change the first verb to a synonym:
+I love surfing
 
 ## Response A:
-The average is 5.
+I hate surfing
 
 ## Response B:
-4.75
+and am planning on going surfing tomorrow morning.
 
-Here B is more accurate than A because 4.75 from B is closer to the correct average 4.8 than 5 from A.
+In this example, Neither output is correct. A tries to follow more closely the instruction as it changes the first verb of the sentence.
 ## Which is best, A, B, or tie?
-B{example_end}
+B
+
+# Example:
+## Instruction:
+Change the first verb to a synonym:
+I love surfing
+
+## Response A:
+I hate surfing
+
+## Response B:
+I don't like surfing
+
+In this example, neither output is correct and the responses are very similar.
+## Which is best, A, B, or tie?
+tie{example_end}
 
 
 Now is the real task, just select among: A, B, or tie.
@@ -50,4 +66,4 @@ Now is the real task, just select among: A, B, or tie.
 ## Response B:
 {output_2}
 
-## Which is best, A, B, or tie?
+## Which is best, A, B, or tie?{user_message_end}
