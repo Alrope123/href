@@ -120,14 +120,18 @@ def generate(args):
                 category_outputs = vllm_model.generate(category_prompts, sampling_params)
                 category_outputs = [it.outputs[0].text for it in category_outputs]
             else:
+                generation_kwargs = {
+                    'model': model,
+                    'tokenizer': tokenizer,
+                    'prompts': category_prompts,
+                    'max_new_tokens': config['max_new_tokens'],
+                    'do_sample': config['temperature'] != 0.0,
+                    'batch_size': config['batch_size'] if config['batch_size'] else 1,
+                }
+                if config['temperature'] != 0.0:
+                    generation_kwargs['temperature'] = config['temperature']
                 category_outputs = generate_completions(
-                    model=model,
-                    tokenizer=tokenizer,
-                    prompts=category_prompts,
-                    max_new_tokens=config['max_new_tokens'],
-                    do_sample=False if config['temperature'] == 0.0 else True,
-                    temperature=config['temperature'],
-                    batch_size=config['batch_size'] if config['batch_size'] else 1,
+                    **generation_kwargs
                 )
         else: # openai model generation
             assert 'format' not in config
