@@ -1,0 +1,17 @@
+qwen3-8b_basic_w_reference:
+  batch_size: 1
+  completion_parser_kwargs:
+    matcher:
+      A: 1.0
+      B: 2.0
+      tie: 0.0
+  completions_kwargs:
+    do_sample: false
+    max_new_tokens: 10000
+    model_kwargs:
+      torch_dtype: float16
+    model_name: Qwen/Qwen3-8B
+    temperature: 0.0
+  fn_completion_parser: match_parser_qwen
+  fn_completions: huggingface_local_completions
+  prompt_template: qwen3-8b_basic_w_reference/prompt.txt
