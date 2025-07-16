@@ -2,6 +2,7 @@
     "llama3": {
         "system_message": "You are a helpful assistant that helps us rate an AI model's responses to instructions.",
         "fn_completions": "huggingface_local_completions",
+        "fn_completion_parser": "match_parser",
         "completions_kwargs": {
             "model_name": "meta-llama/Meta-Llama-3-8B-Instruct",
             "max_new_tokens": 100,
@@ -14,6 +15,7 @@
     "llama3-70b": {
         "system_message": "You are a helpful assistant that helps us rate an AI model's responses to instructions.",
         "fn_completions": "huggingface_local_completions",
+        "fn_completion_parser": "match_parser",
         "completions_kwargs": {
             "model_name": "meta-llama/Meta-Llama-3-70B-Instruct",
             "max_new_tokens": 100,
@@ -26,6 +28,7 @@
     "llama3.1": {
         "system_message": "You are a helpful assistant that helps us rate an AI model's responses to instructions.",
         "fn_completions": "huggingface_local_completions",
+        "fn_completion_parser": "match_parser",
         "completions_kwargs": {
             "model_name": "meta-llama/Llama-3.1-8B-Instruct",
             "max_new_tokens": 100,
@@ -38,6 +41,7 @@
     "llama3.1-70b": {
         "system_message": "You are a helpful assistant that helps us rate an AI model's responses to instructions.",
         "fn_completions": "huggingface_local_completions",
+        "fn_completion_parser": "match_parser",
         "completions_kwargs": {
             "model_name": "meta-llama/Meta-Llama-3.1-70B-Instruct",
             "max_new_tokens": 100,
@@ -50,6 +54,7 @@
     "llama3.3-70b": {
         "system_message": "You are a helpful assistant that helps us rate an AI model's responses to instructions.",
         "fn_completions": "huggingface_local_completions",
+        "fn_completion_parser": "match_parser",
         "completions_kwargs": {
             "model_name": "meta-llama/Llama-3.3-70B-Instruct",
             "max_new_tokens": 100,
@@ -62,6 +67,7 @@
     "llama3.1-405b": {
         "system_message": "You are a helpful assistant that helps us rate an AI model's responses to instructions.",
         "fn_completions": "huggingface_local_completions",
+        "fn_completion_parser": "match_parser",
         "completions_kwargs": {
             "model_name": "meta-llama/Meta-Llama-3-405B-Instruct",
             "max_new_tokens": 100,
@@ -74,6 +80,7 @@
     "qwen3-8b": {
         "system_message": "You are a helpful assistant that helps us rate an AI model's responses to instructions.",
         "fn_completions": "huggingface_local_completions",
+        "fn_completion_parser": "match_parser_qwen",
         "completions_kwargs": {
             "model_name": "Qwen/Qwen3-8B",
             "max_new_tokens": 100,
@@ -86,6 +93,7 @@
     "qwen3-32b": {
         "system_message": "You are a helpful assistant that helps us rate an AI model's responses to instructions.",
         "fn_completions": "huggingface_local_completions",
+        "fn_completion_parser": "match_parser_qwen",
         "completions_kwargs": {
             "model_name": "Qwen/Qwen3-32B",
             "max_new_tokens": 100,

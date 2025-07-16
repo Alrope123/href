@@ -12,6 +12,6 @@ qwen3-32b_basic_no_reference:
       torch_dtype: float16
     model_name: Qwen/Qwen3-32B
     temperature: 0.0
-  fn_completion_parser: match_parser
+  fn_completion_parser: match_parser_qwen
   fn_completions: huggingface_local_completions
   prompt_template: qwen3-32b_basic_no_reference/prompt.txt
