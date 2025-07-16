@@ -68,6 +68,7 @@ def create_config(args):
         messages,
         tokenize=False,
         add_generation_prompt=True,
+        enable_thinking=False
     )
 
     # do sampling while judging
