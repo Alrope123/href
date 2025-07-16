@@ -64,7 +64,3 @@ Now is the real task, just select among: A, B, or tie.
 
 ## Which is best, A, B, or tie?<|im_end|>
 <|im_start|>assistant
-<think>
-
-</think>
-

@@ -1,4 +1,4 @@
-qwen3-8b_basic_w_reference:
+qwen3-8b-reasoning_basic_w_reference:
   batch_size: 1
   completion_parser_kwargs:
     matcher:
@@ -12,6 +12,6 @@ qwen3-8b_basic_w_reference:
       torch_dtype: float16
     model_name: Qwen/Qwen3-8B
     temperature: 0.0
-  fn_completion_parser: match_parser_qwen
+  fn_completion_parser: match_parser
   fn_completions: huggingface_local_completions
-  prompt_template: qwen3-8b_basic_w_reference/prompt.txt
+  prompt_template: qwen3-8b-reasoning_basic_w_reference/prompt.txt
