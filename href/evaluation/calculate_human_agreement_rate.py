@@ -96,10 +96,6 @@ def evaluate(args):
             continue
         data[category].append(example)
 
-    ## DEBUG:
-    for category in args.nr_category:
-        data[category] = data[category][:1]
-
     # specify the annotator for each category
     if args.annotator in ANNOTATOR_SUITE_DICT: # using different annotators for different category
         for category in args.nr_category:

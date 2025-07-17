@@ -106,9 +106,22 @@
     "qwen3-8b-reasoning": {
         "system_message": "You are a helpful assistant that helps us rate an AI model's responses to instructions.",
         "fn_completions": "huggingface_local_completions",
-        "fn_completion_parser": "match_parser",
+        "fn_completion_parser": "match_parser_qwen_reasoning",
         "completions_kwargs": {
             "model_name": "Qwen/Qwen3-8B",
+            "max_new_tokens": 10000,
+            "temperature": 0,
+            "model_kwargs": {
+                "torch_dtype": "float16"
+            }
+        }
+    },
+    "qwen3-32b-reasoning": {
+        "system_message": "You are a helpful assistant that helps us rate an AI model's responses to instructions.",
+        "fn_completions": "huggingface_local_completions",
+        "fn_completion_parser": "match_parser_qwen_reasoning",
+        "completions_kwargs": {
+            "model_name": "Qwen/Qwen3-32B",
             "max_new_tokens": 10000,
             "temperature": 0,
             "model_kwargs": {
