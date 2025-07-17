@@ -93,6 +93,52 @@ ANNOTATOR_SUITE_DICT = {
             "use_human_ref": True,
         },
     },
+    "href_new": {
+        "Brainstorm": {
+            "annotator": "llama3.3-70b_basic_no_reference",
+            "use_human_ref": False,
+        },
+        "Open QA": {
+            "annotator": "llama3.3-70b_basic_w_reference",
+            "use_human_ref": True,
+        },
+        "Closed QA": {
+            "annotator": "llama3.3-70b_basic_w_reference",
+            "use_human_ref": True,
+        }, 
+        "Extract": {
+            "annotator": "llama3.3-70b_basic_w_reference",
+            "use_human_ref": True,
+        },
+        "Generation": {
+            "annotator": "llama3.3-70b_basic_w_reference",
+            "use_human_ref": True,
+        },
+        "Rewrite": {
+            "annotator": "llama3.3-70b_basic_w_reference",
+            "use_human_ref": True,
+        },
+        "Summarize": {
+            "annotator": "llama3.3-70b_basic_no_reference",
+            "use_human_ref": False,
+        },
+        "Classify": {
+            "annotator": "llama3.3-70b_basic_w_reference",
+            "use_human_ref": True,
+        },
+        "Fact Checking or Attributed QA": {
+            "annotator": "llama3.3-70b_basic_w_reference",
+            "use_human_ref": True,
+        },
+        "Multi-Document Synthesis": {
+            "annotator": "llama3.3-70b_basic_w_reference",
+            "use_human_ref": True,
+        }, 
+        "Reasoning Over Numerical Data": {
+            "annotator": "llama3.3-70b_basic_w_reference",
+            "use_human_ref": True,
+        },
+    },
 }
 
 ANNOTATION_REVERSE_MAP = {
