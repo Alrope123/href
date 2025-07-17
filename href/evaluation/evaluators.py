@@ -101,7 +101,7 @@ ANNOTATION_REVERSE_MAP = {
     0: 0
 }
 
-DEFINED_ANNOTATORS = ["short", "long", "random_no_tie", "bertscore", "rouge"]
+DEFINED_ANNOTATORS = ["short", "long", "random_no_tie", "bertscore", "rouge", "contriever", "grit", "qwen", "me5"]
 
 def bertscore(responses_1, responses_2, human_references, args):
     from bert_score import BERTScorer
@@ -264,3 +264,189 @@ def perplexity(model_responses, baseline_responses, human_references, category, 
         })
 
     return annotations
+
+def embedder(responses_1, responses_2, human_references, args, model_name):
+    import torch
+    from transformers import AutoTokenizer, AutoModel
+    from sentence_transformers import SentenceTransformer
+
+    if "meta-llama" in model_name:
+        tokenizer_name_or_path = model_name
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)
+        tokenizer.pad_token = tokenizer.eos_token
+        model = AutoModel.from_pretrained(model_name)
+    elif "GritLM" in model_name:
+        from gritlm import GritLM
+        tokenizer  = None
+        model = GritLM("GritLM/GritLM-7B", torch_dtype="auto", mode="embedding")
+    elif "contriever" in model_name:
+        model, tokenizer, _ = contriever.src.contriever.load_retriever(model_name)
+    elif "dragon" in model_name:
+        tokenizer_name_or_path = model_name
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path)
+        model = AutoModel.from_pretrained(model_name)
+    elif _is_sentence_transformers(model_name):
+        tokenizer = None
+        model = SentenceTransformer(model_name)
+    else:
+        print(f"{model_name} is not supported!")
+        raise AttributeError
+
+    inputs_1 = [res['output'] for res in responses_1]
+    inputs_2 = [res['output'] for res in responses_2]
+    inputs_human = [res['output'] for res in human_references]
+
+    # calculate score
+    embeddings_1 = _embed_passages(inputs_1, model, tokenizer, model_name)
+    embeddings_2 = _embed_passages(inputs_2, model, tokenizer, model_name)
+    embeddings_human = _embed_passages(inputs_human, model, tokenizer, model_name)
+
+    annotations = []
+    for res1, res2, human_ref, emb1, emb2, emb_human in zip(responses_1, responses_2, human_references, embeddings_1, embeddings_2, embeddings_human):
+        cos_similarity_1 = _cosine_similarity_np(emb1, emb_human)
+        cos_similarity_2 = _cosine_similarity_np(emb2, emb_human)
+        if cos_similarity_1 > cos_similarity_2:
+            score = 1.0
+        elif cos_similarity_1 < cos_similarity_2:
+            score = 2.0
+        else:
+            score = 0.0
+
+        annotations.append({
+            "instruction": res1["instruction"],
+            "output_1": res1["output"],
+            "generator_1": res1["generator"],
+            "output_2": res2["output"],
+            "generator_2": res2["generator"],
+            "output_human": human_ref["output"],
+            "annotator": "bert",
+            "preference": score
+        })
+    return annotations
+
+def contriever(responses_1, responses_2, human_references, args):
+    return embedder(responses_1, responses_2, human_references, args, 'facebook/contriever-msmarco')
+
+def grit(responses_1, responses_2, human_references, args):
+    return embedder(responses_1, responses_2, human_references, args, 'GritLM/GritLM-7B')
+
+def qwen(responses_1, responses_2, human_references, args):
+    return embedder(responses_1, responses_2, human_references, args, 'Qwen/Qwen3-Embedding-8B')
+
+def me5(responses_1, responses_2, human_references, args):
+    return embedder(responses_1, responses_2, human_references, args, 'intfloat/multilingual-e5-large-instruct')
+
+def _embed_passages(passages, model, tokenizer, model_name, batch_size=32):
+    import torch
+    from tqdm import tqdm
+    import numpy as np
+
+    device = 'cuda' if torch.cuda.is_available()  else 'cpu'
+    
+    if _is_sentence_transformers(model_name):
+        with torch.no_grad():
+            if "GritLM" in model_name:
+                allembeddings = model.encode(passages, batch_size=batch_size, instruction="<|embed|>\n")
+            else:
+                allembeddings = model.encode(passages, batch_size=batch_size)
+    
+    elif "meta-llama" in model_name:
+        total = 0
+        allembeddings = []
+        batch_text = []
+        tot_psgs = len(passages)
+
+        with torch.no_grad():
+            for k, p in enumerate(tqdm(passages)):
+                # Prepare text for encoding
+                batch_text.append(p)
+
+                if len(batch_text) == batch_size or k == tot_psgs - 1:
+                    encoded_batch = tokenizer.batch_encode_plus(
+                        batch_text,
+                        return_tensors="pt",
+                        padding=True,
+                        truncation=True,
+                    )
+
+                    encoded_batch = {k: v.to(device) for k, v in encoded_batch.items()}
+                    output = model(**encoded_batch)  # Get model output
+
+                    if "contriever" not in model_name:
+                        hidden_states = output.last_hidden_state  # Shape: (batch_size, seq_len, hidden_dim)
+                        attention_mask = encoded_batch["attention_mask"]  # Shape: (batch_size, seq_len)
+
+                        seq_len = hidden_states.shape[1]  # Get sequence length (L)
+                        indices = torch.arange(1, seq_len + 1, dtype=torch.float32, device=hidden_states.device)  # Token positions
+
+                        # Zero out weights for padding tokens
+                        indices = indices * attention_mask  # Multiply by mask to remove padding influence
+                        weight_sum = torch.sum(indices, dim=1, keepdim=True)  # Sum of non-padding weights per passage
+                        
+                        # Avoid division by zero (handle all-padding cases)
+                        weight_sum = torch.where(weight_sum == 0, torch.tensor(1.0, device=hidden_states.device), weight_sum)
+
+                        # Compute normalized weights
+                        weights = indices / weight_sum  # Normalize weights
+                        weights = weights.unsqueeze(-1)  # Shape: [batch_size, seq_len, 1] for broadcasting
+
+                        # Compute final weighted embedding
+                        weighted_embedding = torch.sum(weights * hidden_states, dim=1)  # Weighted sum over tokens
+
+                        embeddings = weighted_embedding.cpu()
+
+                    allembeddings.append(embeddings)
+
+                    batch_text = []
+
+        allembeddings = torch.cat(allembeddings, dim=0).numpy()
+
+    else:
+        total = 0
+        allembeddings = []
+        batch_text = []
+        tot_psgs = len(passages)
+        with torch.no_grad():
+            for k, p in enumerate(tqdm(passages)):
+                batch_text.append(p)
+
+                if len(batch_text) == batch_size or k == tot_psgs - 1:
+                    encoded_batch = tokenizer.batch_encode_plus(
+                        batch_text,
+                        return_tensors="pt",
+                        padding=True,
+                        truncation=True,
+                    )
+
+                    encoded_batch = {k: v.to(device) for k, v in encoded_batch.items()}
+                    embeddings = model(**encoded_batch)  # shape: (per_gpu_batch_size, hidden_size)
+                    # if "contriever" not in model_name:
+                    #     # assume in hf form
+                    #     embeddings = embeddings.last_hidden_state[:, 0, :]
+                    embeddings = embeddings.last_hidden_state[:, 0, :]
+
+                    print(embeddings.shape)
+                    embeddings = embeddings.cpu()
+                    
+                    allembeddings.append(embeddings)
+
+                    batch_text = []
+        
+        allembeddings = torch.cat(allembeddings, dim=0).numpy()
+
+    allembeddings = allembeddings.astype(np.float16)
+    return allembeddings
+
+def _cosine_similarity_np(vec1, vec2):
+    import numpy as np
+    dot_product = np.dot(vec1, vec2)
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+    return dot_product / (norm1 * norm2)
+
+def _is_sentence_transformers(model_name_or_path):
+    return "sentence-transformers" in model_name_or_path or \
+            "intfloat" in model_name_or_path or \
+            "Snowflake" in model_name_or_path or \
+            "GritLM" in model_name_or_path or \
+            "Qwen" in model_name_or_path

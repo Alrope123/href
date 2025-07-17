@@ -121,6 +121,8 @@ def evaluate(args):
 
     # load model responses
     href_data = datasets.load_dataset(args.dataset)[args.split]
+    href_data2 = datasets.load_dataset("json", data_files=f"tmp/processed_model_responses_11x25_private.jsonl", split="train")
+    href_data = datasets.concatenate_datasets([href_data, href_data2])
     data = defaultdict(list)
     for example in href_data:
         category = example['category']
@@ -145,6 +147,7 @@ def evaluate(args):
 
         rates_total = []
         for category in args.nr_category:
+            print(f"Processing category {category} with annotator {category_to_annotator[category]['annotator']}")
             annotator = category_to_annotator[category]['annotator']
 
             output_path = os.path.join(args.result_dir, category.lower().replace(" ", "_"))
@@ -157,6 +160,9 @@ def evaluate(args):
             rates_outer = []
             for dp in data[category]:
                 rates_outer.append(leave_one_out_agreement_outer(dp['annotations'], prompt_to_annotation[dp['instruction'], dp['generator_a'], dp['generator_b']]))
+            
+            if len(rates_outer) <= 0:
+                assert False, f"Category: {category}"
             results[category].append(sum(rates_outer) / len(rates_outer))
             rates_total.extend(rates_outer)
         

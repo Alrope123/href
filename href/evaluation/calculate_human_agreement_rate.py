@@ -87,6 +87,7 @@ def evaluate(args):
     # load model responses
     href_data = datasets.load_dataset(args.dataset)[args.split]
     href_data2 = datasets.load_dataset("json", data_files=f"/weka_data/xinxil/href_data/processed_model_responses_11x25_private.jsonl", split="train")
+    # href_data2 = datasets.load_dataset("json", data_files=f"tmp/processed_model_responses_11x25_private.jsonl", split="train")
     href_data = datasets.concatenate_datasets([href_data, href_data2])
     data = defaultdict(list)
     for example in href_data:
@@ -94,6 +95,10 @@ def evaluate(args):
         if args.nr_category and category not in args.nr_category:
             continue
         data[category].append(example)
+
+    ## DEBUG:
+    for category in args.nr_category:
+        data[category] = data[category][:1]
 
     # specify the annotator for each category
     if args.annotator in ANNOTATOR_SUITE_DICT: # using different annotators for different category
