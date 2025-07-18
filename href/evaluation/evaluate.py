@@ -36,6 +36,9 @@ def evaluate(args):
         href_data = datasets.load_dataset(args.dataset.split(".")[-1], data_files=args.dataset)[args.split]
     else: # load from huggingface
         href_data = datasets.load_dataset(args.dataset)[args.split]
+    # href_data2 = datasets.load_dataset("json", data_files=f"/weka_data/xinxil/href_data/processed_model_responses_11x25_private.jsonl", split="train")
+    # # href_data2 = datasets.load_dataset("json", data_files=f"tmp/processed_model_responses_11x25_private.jsonl", split="train")
+    # href_data = datasets.concatenate_datasets([href_data, href_data2])
     baseline_responses = defaultdict(list)
     human_references = defaultdict(list)  # category -> list of example dicts
     for example in href_data:
@@ -90,29 +93,35 @@ def evaluate(args):
             evaluate_func(category_baseline_responses, category_model_responses, category_human_references, category, args)
         elif annotator in DEFINED_ANNOTATORS: # non-llm annotators
             # run the according evaluation function
-            evaluate_func = getattr(annotator_funcs, annotator)
-            cur_annotations = evaluate_func(category_baseline_responses, category_model_responses, category_human_references, args)
-            os.makedirs(os.path.join(output_path, annotator), exist_ok=True)
-            json.dump(cur_annotations, open(os.path.join(output_path, annotator, "annotations.json"), 'w')) 
+            if os.path.exists(os.path.join(output_path, annotator, "annotations.json")):
+                logging.info(f"Annotations already exist at {os.path.join(output_path, annotator, 'annotations.json')}, skip evaluation.")
+                cur_annotations = json.load(open(os.path.join(output_path, annotator, "annotations.json"), 'r'))
+            else:
+                evaluate_func = getattr(annotator_funcs, annotator)
+                cur_annotations = evaluate_func(category_baseline_responses, category_model_responses, category_human_references, args)
+                os.makedirs(os.path.join(output_path, annotator), exist_ok=True)
+                json.dump(cur_annotations, open(os.path.join(output_path, annotator, "annotations.json"), 'w')) 
         else: # llm annotators
-            cache_dir = os.path.join(args.cache_dir, model_name, category.lower().replace(" ", "_"))
-            os.makedirs(cache_dir, exist_ok=True)
-            alpaca_farm_evaluate(
-                model_outputs=category_model_responses,
-                reference_outputs=category_baseline_responses,
-                human_outputs=category_human_references,
-                annotators_config=annotator,
-                output_path=output_path,
-                is_return_instead_of_print=True,
-                caching_path=os.path.join(cache_dir, f"{annotator}.json"),
-                precomputed_leaderboard=None,
-                is_cache_leaderboard=False,
-                base_dir=args.config_dir,
-                seed=args.seed,
-                output_keys=("output_1", "output_2", "output_human") if use_human_reference else ("output_1", "output_2")
-            )
-            cur_annotations = json.load(open(os.path.join(output_path, annotator, "annotations.json"), 'r'))
-        
+            if os.path.exists(os.path.join(output_path, annotator, "annotations.json")):
+                cur_annotations = json.load(open(os.path.join(output_path, annotator, "annotations.json"), 'r'))
+            else:
+                cache_dir = os.path.join(args.cache_dir, model_name, category.lower().replace(" ", "_"))
+                os.makedirs(cache_dir, exist_ok=True)
+                alpaca_farm_evaluate(
+                    model_outputs=category_model_responses,
+                    reference_outputs=category_baseline_responses,
+                    human_outputs=category_human_references,
+                    annotators_config=annotator,
+                    output_path=output_path,
+                    is_return_instead_of_print=True,
+                    caching_path=os.path.join(cache_dir, f"{annotator}.json"),
+                    precomputed_leaderboard=None,
+                    is_cache_leaderboard=False,
+                    base_dir=args.config_dir,
+                    seed=args.seed,
+                    output_keys=("output_1", "output_2", "output_human") if use_human_reference else ("output_1", "output_2")
+                )
+                cur_annotations = json.load(open(os.path.join(output_path, annotator, "annotations.json"), 'r'))
         # we combined the results if coming from different basic annotators
         if annotator != args.annotator: 
             os.makedirs(os.path.join(output_path, args.annotator), exist_ok=True)
@@ -178,6 +187,9 @@ def main():
     parser.add_argument(
         "--nr_category",
         type=str,
+        # default=["Generation", "Open QA", "Brainstorm", "Rewrite", "Summarize",
+        #          "Classify", "Closed QA", "Extract", "Reasoning Over Numerical Data",
+        #          "Multi-Document Synthesis", "Fact Checking or Attributed QA"],
         default=["Generation", "Open QA", "Brainstorm", "Rewrite", "Summarize",
                  "Classify", "Closed QA", "Extract"],
         nargs="+",
