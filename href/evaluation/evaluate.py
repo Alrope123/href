@@ -74,6 +74,7 @@ def evaluate(args):
     results = {"Average": {"wins": [], "ties": []}}
     for category in args.nr_category:
         annotator = category_to_annotator[category]['annotator']
+        logging.info(f"Using annotator {annotator} for category {category}!")
         use_human_reference = category_to_annotator[category]['use_human_ref']
 
         category_model_responses = model_responses[category]
