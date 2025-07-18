@@ -103,6 +103,7 @@ def evaluate(args):
                 json.dump(cur_annotations, open(os.path.join(output_path, annotator, "annotations.json"), 'w')) 
         else: # llm annotators
             if os.path.exists(os.path.join(output_path, annotator, "annotations.json")):
+                logging.info(f"Annotations already exist at {os.path.join(output_path, annotator, 'annotations.json')}, skip evaluation.")
                 cur_annotations = json.load(open(os.path.join(output_path, annotator, "annotations.json"), 'r'))
             else:
                 cache_dir = os.path.join(args.cache_dir, model_name, category.lower().replace(" ", "_"))
