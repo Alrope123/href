@@ -13,5 +13,5 @@ llama3.3-70b_basic_no_reference:
     model_name: meta-llama/Llama-3.3-70B-Instruct
     temperature: 0.0
   fn_completion_parser: match_parser
-  fn_completions: vllm_local_completions
+  fn_completions: huggingface_local_completions
   prompt_template: llama3.3-70b_basic_no_reference/prompt.txt
