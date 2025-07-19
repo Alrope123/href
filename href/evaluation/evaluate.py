@@ -9,6 +9,16 @@ from alpaca_eval import evaluate as alpaca_farm_evaluate
 from href.evaluation.evaluators import DEFINED_ANNOTATORS, ANNOTATOR_SUITE_DICT
 import href.evaluation.evaluators as annotator_funcs
 import torch
+import GPUtil
+
+def print_gpu_utilization():
+    gpus = GPUtil.getGPUs()
+    for gpu in gpus:
+        print(f"GPU ID: {gpu.id}, Name: {gpu.name}")
+        print(f"Memory Used: {gpu.memoryUsed} MB")
+        print(f"Memory Total: {gpu.memoryTotal} MB")
+        print(f"Memory Free: {gpu.memoryFree} MB")
+        print(f"Memory Utilization: {gpu.memoryUtil * 100:.2f}%")
 
 def evaluate(args):
     assert args.model_name is not None, "Model name should be specified."
@@ -73,8 +83,10 @@ def evaluate(args):
 
     # running evaluation through AlpacaEval
     results = {"Average": {"wins": [], "ties": []}}
+    ### DEBUG
+    print("Before evaluation:")
+    print_gpu_utilization()
     for category in args.nr_category:
-        torch.cuda.empty_cache()
         annotator = category_to_annotator[category]['annotator']
         logging.info(f"Using annotator {annotator} for category {category}!")
         use_human_reference = category_to_annotator[category]['use_human_ref']
@@ -89,7 +101,9 @@ def evaluate(args):
         output_path = os.path.join(args.save_dir, model_name, category.lower().replace(" ", "_"))
         os.makedirs(output_path, exist_ok=True)
 
-        
+        ### DEBUG
+        print(f"Before category: {category}")
+        print_gpu_utilization()
         if annotator == "perplexity":
             assert args.perplexity_path is not None, "Needs to specify a perplexity dir"
             evaluate_func = getattr(annotator_funcs, annotator)
@@ -126,6 +140,14 @@ def evaluate(args):
                     output_keys=("output_1", "output_2", "output_human") if use_human_reference else ("output_1", "output_2")
                 )
                 cur_annotations = json.load(open(os.path.join(output_path, annotator, "annotations.json"), 'r'))
+        
+        ### DEBUG
+        print(f"After category: {category} before empty cache")
+        print_gpu_utilization()
+        torch.cuda.empty_cache()
+        print(f"After empty cache")
+        print_gpu_utilization()
+
         # we combined the results if coming from different basic annotators
         if annotator != args.annotator: 
             os.makedirs(os.path.join(output_path, args.annotator), exist_ok=True)
