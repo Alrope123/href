@@ -43,7 +43,7 @@ def evaluate(args):
             model_responses[category].extend([json.loads(line) for line in fin])
 
     # load baseline model response and/or human response
-    if any([args.dataset.endswith(f".{suffix}") for suffix in ["csv, json, text"]]): # load from local file
+    if any([args.dataset.endswith(f".{suffix}") for suffix in ["csv", "json", "text"]]): # load from local file
         href_data = datasets.load_dataset(args.dataset.split(".")[-1], data_files=args.dataset)[args.split]
     else: # load from huggingface
         href_data = datasets.load_dataset(args.dataset)[args.split]
@@ -81,85 +81,120 @@ def evaluate(args):
                                     'use_human_ref': args.use_human_reference} 
                                 for category in args.nr_category}
 
-    # running evaluation through AlpacaEval
+    annotator_to_cateogries = defaultdict(list)
+    for category, v in category_to_annotator.items():
+        annotator_to_cateogries[v['annotator']].append(category)
+
     results = {"Average": {"wins": [], "ties": []}}
+    
     ### DEBUG
     print("Before evaluation:")
     print_gpu_utilization()
-    for category in args.nr_category:
-        annotator = category_to_annotator[category]['annotator']
-        logging.info(f"Using annotator {annotator} for category {category}!")
-        use_human_reference = category_to_annotator[category]['use_human_ref']
+    for annotator, categories in annotator_to_cateogries.items():
+        logging.info(f"Categories {categories} will use annotator {annotator}")
+        use_human_reference = category_to_annotator[categories[0]]['use_human_ref']
 
-        category_model_responses = model_responses[category]
-        category_baseline_responses = baseline_responses[category]
+        cur_model_responses = []
+        cur_baseline_responses = []
         if use_human_reference:
-            category_human_references = human_references[category]
+            cur_human_references = []
         else:
-            category_human_references = None
-        logging.info(f"Running evaluation on category: {category}")
-        output_path = os.path.join(args.save_dir, model_name, category.lower().replace(" ", "_"))
-        os.makedirs(output_path, exist_ok=True)
+            cur_human_references = None
+        cate_to_num = {}
 
-        ### DEBUG
-        print(f"Before category: {category}")
-        print_gpu_utilization()
-        if annotator == "perplexity":
-            assert args.perplexity_path is not None, "Needs to specify a perplexity dir"
-            evaluate_func = getattr(annotator_funcs, annotator)
-            evaluate_func(category_baseline_responses, category_model_responses, category_human_references, category, args)
-        elif annotator in DEFINED_ANNOTATORS: # non-llm annotators
+        for category in categories:
+            output_path = os.path.join(args.save_dir, model_name, category.lower().replace(" ", "_"))
+            if os.path.exists(os.path.join(output_path, annotator, "annotations.json")):
+                logging.info(f"Annotations already exist at {os.path.join(output_path, annotator, 'annotations.json')}, skip evaluation.")
+                cur_annotations = json.load(open(os.path.join(output_path, annotator, "annotations.json"), 'r'))
+                if annotator != args.annotator: 
+                    os.makedirs(os.path.join(output_path, args.annotator), exist_ok=True)
+                    json.dump(cur_annotations, open(os.path.join(output_path, args.annotator, "annotations.json"), 'w'))
+                
+                # record result 
+                results[category] = {
+                    "wins": [cur_a['preference'] == 2.0 for cur_a in cur_annotations],
+                    "ties": [cur_a['preference'] == 0.0 for cur_a in cur_annotations]
+                }
+                results["Average"]["wins"].extend([cur_a['preference'] == 2.0 for cur_a in cur_annotations])
+                results["Average"]["ties"].extend([cur_a['preference'] == 0.0 for cur_a in cur_annotations])
+            else:
+                os.makedirs(output_path, exist_ok=True)
+                cur_model_responses.append(model_responses[category])
+                cur_baseline_responses.append(baseline_responses[category])
+                if use_human_reference:
+                    cur_human_references.append(human_references[category])
+                cate_to_num[category] = len(model_responses[category])
+    
+        if annotator in DEFINED_ANNOTATORS: # non-llm annotators
             # run the according evaluation function
-            if os.path.exists(os.path.join(output_path, annotator, "annotations.json")):
-                logging.info(f"Annotations already exist at {os.path.join(output_path, annotator, 'annotations.json')}, skip evaluation.")
-                cur_annotations = json.load(open(os.path.join(output_path, annotator, "annotations.json"), 'r'))
-            else:
-                evaluate_func = getattr(annotator_funcs, annotator)
-                cur_annotations = evaluate_func(category_baseline_responses, category_model_responses, category_human_references, args)
+            evaluate_func = getattr(annotator_funcs, annotator)
+            cur_annotations = evaluate_func(cur_baseline_responses, cur_model_responses, cur_human_references, args)
+            index = 0
+            for category, num in cate_to_num.items():
+                cur_annotations_category = cur_annotations[index:index+num]
+                index += num
+                output_path = os.path.join(args.save_dir, model_name, category.lower().replace(" ", "_"))
                 os.makedirs(os.path.join(output_path, annotator), exist_ok=True)
-                json.dump(cur_annotations, open(os.path.join(output_path, annotator, "annotations.json"), 'w')) 
+                json.dump(cur_annotations_category, open(os.path.join(output_path, annotator, "annotations.json"), 'w'))
+
+                # we combined the results if coming from different basic annotators
+                if annotator != args.annotator: 
+                    os.makedirs(os.path.join(output_path, args.annotator), exist_ok=True)
+                    json.dump(cur_annotations, open(os.path.join(output_path, args.annotator, "annotations.json"), 'w'))
+                
+                # record result 
+                results[category] = {
+                    "wins": [cur_a['preference'] == 2.0 for cur_a in cur_annotations],
+                    "ties": [cur_a['preference'] == 0.0 for cur_a in cur_annotations]
+                }
+                results["Average"]["wins"].extend([cur_a['preference'] == 2.0 for cur_a in cur_annotations])
+                results["Average"]["ties"].extend([cur_a['preference'] == 0.0 for cur_a in cur_annotations])
+
         else: # llm annotators
-            if os.path.exists(os.path.join(output_path, annotator, "annotations.json")):
-                logging.info(f"Annotations already exist at {os.path.join(output_path, annotator, 'annotations.json')}, skip evaluation.")
-                cur_annotations = json.load(open(os.path.join(output_path, annotator, "annotations.json"), 'r'))
-            else:
-                cache_dir = os.path.join(args.cache_dir, model_name, category.lower().replace(" ", "_"))
-                os.makedirs(cache_dir, exist_ok=True)
-                alpaca_farm_evaluate(
-                    model_outputs=category_model_responses,
-                    reference_outputs=category_baseline_responses,
-                    human_outputs=category_human_references,
-                    annotators_config=annotator,
-                    output_path=output_path,
-                    is_return_instead_of_print=True,
-                    caching_path=os.path.join(cache_dir, f"{annotator}.json"),
-                    precomputed_leaderboard=None,
-                    is_cache_leaderboard=False,
-                    base_dir=args.config_dir,
-                    seed=args.seed,
-                    output_keys=("output_1", "output_2", "output_human") if use_human_reference else ("output_1", "output_2")
-                )
-                cur_annotations = json.load(open(os.path.join(output_path, annotator, "annotations.json"), 'r'))
+            # cache_dir = os.path.join(args.cache_dir, model_name, category.lower().replace(" ", "_"))
+            cache_dir = os.path.join(args.cache_dir, model_name, annotator.lower().replace(" ", "_") + f"_{args.annotator}_aggregated")
+            output_path = os.path.join(args.save_dir, model_name, annotator.lower().replace(" ", "_") + f"_{args.annotator}_aggregated")
+            os.makedirs(cache_dir, exist_ok=True)
+            alpaca_farm_evaluate(
+                model_outputs=cur_model_responses,
+                reference_outputs=cur_baseline_responses,
+                human_outputs=cur_human_references,
+                annotators_config=annotator,
+                output_path=output_path,
+                is_return_instead_of_print=True,
+                caching_path=os.path.join(cache_dir, f"{annotator}.json"),
+                precomputed_leaderboard=None,
+                is_cache_leaderboard=False,
+                base_dir=args.config_dir,
+                seed=args.seed,
+                output_keys=("output_1", "output_2", "output_human") if use_human_reference else ("output_1", "output_2")
+            )
+            cur_annotations = json.load(open(os.path.join(output_path, annotator, "annotations.json"), 'r'))
+            index = 0
+            for category, num in cate_to_num.items():
+                cur_annotations_category = cur_annotations[index:index+num]
+                index += num
+                output_path = os.path.join(args.save_dir, model_name, category.lower().replace(" ", "_"))
+                os.makedirs(os.path.join(output_path, annotator), exist_ok=True)
+                json.dump(cur_annotations_category, open(os.path.join(output_path, annotator, "annotations.json"), 'w'))
+
+                # we combined the results if coming from different basic annotators
+                if annotator != args.annotator: 
+                    os.makedirs(os.path.join(output_path, args.annotator), exist_ok=True)
+                    json.dump(cur_annotations, open(os.path.join(output_path, args.annotator, "annotations.json"), 'w'))
+                
+                # record result 
+                results[category] = {
+                    "wins": [cur_a['preference'] == 2.0 for cur_a in cur_annotations],
+                    "ties": [cur_a['preference'] == 0.0 for cur_a in cur_annotations]
+                }
+                results["Average"]["wins"].extend([cur_a['preference'] == 2.0 for cur_a in cur_annotations])
+                results["Average"]["ties"].extend([cur_a['preference'] == 0.0 for cur_a in cur_annotations])
         
-        ### DEBUG
-        print(f"After category: {category} before empty cache")
-        print_gpu_utilization()
         torch.cuda.empty_cache()
         print(f"After empty cache")
         print_gpu_utilization()
-
-        # we combined the results if coming from different basic annotators
-        if annotator != args.annotator: 
-            os.makedirs(os.path.join(output_path, args.annotator), exist_ok=True)
-            json.dump(cur_annotations, open(os.path.join(output_path, args.annotator, "annotations.json"), 'w'))
-        
-        # record result 
-        results[category] = {
-            "wins": [cur_a['preference'] == 2.0 for cur_a in cur_annotations],
-            "ties": [cur_a['preference'] == 0.0 for cur_a in cur_annotations]
-        }
-        results["Average"]["wins"].extend([cur_a['preference'] == 2.0 for cur_a in cur_annotations])
-        results["Average"]["ties"].extend([cur_a['preference'] == 0.0 for cur_a in cur_annotations])
     
     for c, result in results.items():
         for t, annotations in result.items():
@@ -176,12 +211,6 @@ def main():
     # general arguments
     parser.add_argument(
         "--response_dir",
-        type=str, 
-        default=None,
-        help="The directory that contains pre-generated model outputs. If specified, we will skip output generation and jump directly into evaluation."
-    )
-    parser.add_argument(
-        "--perplexity_dir",
         type=str, 
         default=None,
         help="The directory that contains pre-generated model outputs. If specified, we will skip output generation and jump directly into evaluation."
