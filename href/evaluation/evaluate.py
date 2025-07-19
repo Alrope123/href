@@ -126,6 +126,8 @@ def evaluate(args):
                     cur_human_references.extend(human_references[category])
                 cate_to_num[category] = len(model_responses[category])
     
+        logging.info(f"Total {len(cur_model_responses)} examples to evaluate for annotator {annotator}.")
+
         if annotator in DEFINED_ANNOTATORS: # non-llm annotators
             # run the according evaluation function
             evaluate_func = getattr(annotator_funcs, annotator)
