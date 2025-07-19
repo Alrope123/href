@@ -47,9 +47,8 @@ def evaluate(args):
         href_data = datasets.load_dataset(args.dataset.split(".")[-1], data_files=args.dataset)[args.split]
     else: # load from huggingface
         href_data = datasets.load_dataset(args.dataset)[args.split]
-    # href_data2 = datasets.load_dataset("json", data_files=f"/weka_data/xinxil/href_data/processed_model_responses_11x25_private.jsonl", split="train")
-    # # href_data2 = datasets.load_dataset("json", data_files=f"tmp/processed_model_responses_11x25_private.jsonl", split="train")
-    # href_data = datasets.concatenate_datasets([href_data, href_data2])
+    href_data2 = datasets.load_dataset("json", data_files=f"/weka_data/xinxil/href_data/processed_test_set_3_cat.jsonl", split="train")
+    href_data = datasets.concatenate_datasets([href_data, href_data2])
     baseline_responses = defaultdict(list)
     human_references = defaultdict(list)  # category -> list of example dicts
     for example in href_data:
@@ -251,11 +250,11 @@ def main():
     parser.add_argument(
         "--nr_category",
         type=str,
-        # default=["Generation", "Open QA", "Brainstorm", "Rewrite", "Summarize",
-        #          "Classify", "Closed QA", "Extract", "Reasoning Over Numerical Data",
-        #          "Multi-Document Synthesis", "Fact Checking or Attributed QA"],
         default=["Generation", "Open QA", "Brainstorm", "Rewrite", "Summarize",
-                 "Classify", "Closed QA", "Extract"],
+                 "Classify", "Closed QA", "Extract", "Reasoning Over Numerical Data",
+                 "Multi-Document Synthesis", "Fact Checking or Attributed QA"],
+        # default=["Generation", "Open QA", "Brainstorm", "Rewrite", "Summarize",
+        #          "Classify", "Closed QA", "Extract"],
         nargs="+",
         help="Categories in the HREF to include."
     )
