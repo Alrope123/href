@@ -47,8 +47,6 @@ def evaluate(args):
         href_data = datasets.load_dataset(args.dataset.split(".")[-1], data_files=args.dataset)[args.split]
     else: # load from huggingface
         href_data = datasets.load_dataset(args.dataset)[args.split]
-    href_data2 = datasets.load_dataset("json", data_files=f"/weka_data/xinxil/href_data/processed_test_set_3_cat.jsonl", split="train")
-    href_data = datasets.concatenate_datasets([href_data, href_data2])
     baseline_responses = defaultdict(list)
     human_references = defaultdict(list)  # category -> list of example dicts
     for example in href_data:
