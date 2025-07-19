@@ -125,7 +125,7 @@ def evaluate(args):
                 if use_human_reference:
                     cur_human_references.extend(human_references[category])
                 cate_to_num[category] = len(model_responses[category])
-    
+
         logging.info(f"Total {len(cur_model_responses)} examples to evaluate for annotator {annotator}.")
         if len(cur_model_responses) == 0:
             logging.warning(f"No examples to evaluate for annotator {annotator}.")
@@ -137,6 +137,8 @@ def evaluate(args):
             cur_annotations = evaluate_func(cur_baseline_responses, cur_model_responses, cur_human_references, args)
             index = 0
             for category, num in cate_to_num.items():
+                if num == 0:
+                    continue
                 cur_annotations_category = cur_annotations[index:index+num]
                 index += num
                 output_path = os.path.join(args.save_dir, model_name, category.lower().replace(" ", "_"))
@@ -150,11 +152,11 @@ def evaluate(args):
                 
                 # record result 
                 results[category] = {
-                    "wins": [cur_a['preference'] == 2.0 for cur_a in cur_annotations],
-                    "ties": [cur_a['preference'] == 0.0 for cur_a in cur_annotations]
+                    "wins": [cur_a['preference'] == 2.0 for cur_a in cur_annotations_category],
+                    "ties": [cur_a['preference'] == 0.0 for cur_a in cur_annotations_category]
                 }
-                results["Average"]["wins"].extend([cur_a['preference'] == 2.0 for cur_a in cur_annotations])
-                results["Average"]["ties"].extend([cur_a['preference'] == 0.0 for cur_a in cur_annotations])
+                results["Average"]["wins"].extend([cur_a['preference'] == 2.0 for cur_a in cur_annotations_category])
+                results["Average"]["ties"].extend([cur_a['preference'] == 0.0 for cur_a in cur_annotations_category])
 
         else: # llm annotators
             # cache_dir = os.path.join(args.cache_dir, model_name, category.lower().replace(" ", "_"))
@@ -178,6 +180,8 @@ def evaluate(args):
             cur_annotations = json.load(open(os.path.join(output_path, annotator, "annotations.json"), 'r'))
             index = 0
             for category, num in cate_to_num.items():
+                if num == 0:
+                    continue
                 cur_annotations_category = cur_annotations[index:index+num]
                 index += num
                 output_path = os.path.join(args.save_dir, model_name, category.lower().replace(" ", "_"))
@@ -187,16 +191,16 @@ def evaluate(args):
                 # we combined the results if coming from different basic annotators
                 if annotator != args.annotator: 
                     os.makedirs(os.path.join(output_path, args.annotator), exist_ok=True)
-                    json.dump(cur_annotations, open(os.path.join(output_path, args.annotator, "annotations.json"), 'w'))
+                    json.dump(cur_annotations_category, open(os.path.join(output_path, args.annotator, "annotations.json"), 'w'))
                 
                 # record result 
                 results[category] = {
-                    "wins": [cur_a['preference'] == 2.0 for cur_a in cur_annotations],
-                    "ties": [cur_a['preference'] == 0.0 for cur_a in cur_annotations]
+                    "wins": [cur_a['preference'] == 2.0 for cur_a in cur_annotations_category],
+                    "ties": [cur_a['preference'] == 0.0 for cur_a in cur_annotations_category]
                 }
-                results["Average"]["wins"].extend([cur_a['preference'] == 2.0 for cur_a in cur_annotations])
-                results["Average"]["ties"].extend([cur_a['preference'] == 0.0 for cur_a in cur_annotations])
-        
+                results["Average"]["wins"].extend([cur_a['preference'] == 2.0 for cur_a in cur_annotations_category])
+                results["Average"]["ties"].extend([cur_a['preference'] == 0.0 for cur_a in cur_annotations_category])
+
         torch.cuda.empty_cache()
         print(f"After empty cache")
         print_gpu_utilization()
