@@ -127,6 +127,9 @@ def evaluate(args):
                 cate_to_num[category] = len(model_responses[category])
     
         logging.info(f"Total {len(cur_model_responses)} examples to evaluate for annotator {annotator}.")
+        if len(cur_model_responses) == 0:
+            logging.warning(f"No examples to evaluate for annotator {annotator}.")
+            continue
 
         if annotator in DEFINED_ANNOTATORS: # non-llm annotators
             # run the according evaluation function
