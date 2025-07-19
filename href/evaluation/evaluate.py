@@ -91,10 +91,10 @@ def evaluate(args):
         logging.info(f"Using annotator {annotator} for category {category}!")
         use_human_reference = category_to_annotator[category]['use_human_ref']
 
-        category_model_responses = model_responses[category][:100]
-        category_baseline_responses = baseline_responses[category][:100]
+        category_model_responses = model_responses[category]
+        category_baseline_responses = baseline_responses[category]
         if use_human_reference:
-            category_human_references = human_references[category][:100]
+            category_human_references = human_references[category]
         else:
             category_human_references = None
         logging.info(f"Running evaluation on category: {category}")
