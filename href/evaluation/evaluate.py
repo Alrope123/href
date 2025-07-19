@@ -8,6 +8,7 @@ import datasets
 from alpaca_eval import evaluate as alpaca_farm_evaluate
 from href.evaluation.evaluators import DEFINED_ANNOTATORS, ANNOTATOR_SUITE_DICT
 import href.evaluation.evaluators as annotator_funcs
+import torch
 
 def evaluate(args):
     assert args.model_name is not None, "Model name should be specified."
@@ -73,6 +74,7 @@ def evaluate(args):
     # running evaluation through AlpacaEval
     results = {"Average": {"wins": [], "ties": []}}
     for category in args.nr_category:
+        torch.cuda.empty_cache()
         annotator = category_to_annotator[category]['annotator']
         logging.info(f"Using annotator {annotator} for category {category}!")
         use_human_reference = category_to_annotator[category]['use_human_ref']
