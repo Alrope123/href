@@ -120,10 +120,10 @@ def evaluate(args):
                 results["Average"]["ties"].extend([cur_a['preference'] == 0.0 for cur_a in cur_annotations])
             else:
                 os.makedirs(output_path, exist_ok=True)
-                cur_model_responses.append(model_responses[category])
-                cur_baseline_responses.append(baseline_responses[category])
+                cur_model_responses.extend(model_responses[category])
+                cur_baseline_responses.extend(baseline_responses[category])
                 if use_human_reference:
-                    cur_human_references.append(human_references[category])
+                    cur_human_references.extend(human_references[category])
                 cate_to_num[category] = len(model_responses[category])
     
         if annotator in DEFINED_ANNOTATORS: # non-llm annotators
