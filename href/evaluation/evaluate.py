@@ -248,11 +248,11 @@ def main():
     parser.add_argument(
         "--nr_category",
         type=str,
-        default=["Generation", "Open QA", "Brainstorm", "Rewrite", "Summarize",
-                 "Classify", "Closed QA", "Extract", "Reasoning Over Numerical Data",
-                 "Multi-Document Synthesis", "Fact Checking or Attributed QA"],
         # default=["Generation", "Open QA", "Brainstorm", "Rewrite", "Summarize",
-        #          "Classify", "Closed QA", "Extract"],
+        #          "Classify", "Closed QA", "Extract", "Reasoning Over Numerical Data",
+        #          "Multi-Document Synthesis", "Fact Checking or Attributed QA"],
+        default=["Generation", "Open QA", "Brainstorm", "Rewrite", "Summarize",
+                 "Classify", "Closed QA", "Extract"],
         nargs="+",
         help="Categories in the HREF to include."
     )
